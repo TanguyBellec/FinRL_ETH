@@ -60,12 +60,14 @@ class FeatureEngineer:
         self,
         use_technical_indicator=True,
         tech_indicator_list=config.INDICATORS,
+        stock_indicator = config.STOCK_INDICATORS,
         use_vix=False,
         use_turbulence=False,
         user_defined_feature=False,
     ):
         self.use_technical_indicator = use_technical_indicator
         self.tech_indicator_list = tech_indicator_list
+        self.stock_indicator = stock_indicator
         self.use_vix = use_vix
         self.use_turbulence = use_turbulence
         self.user_defined_feature = user_defined_feature
@@ -76,7 +78,7 @@ class FeatureEngineer:
         @:return: a DataMatrices object
         """
         # clean data
-        df = self.clean_data(df)
+        #df = self.clean_data(df)
 
         # add technical indicators using stockstats
         if self.use_technical_indicator:
@@ -138,10 +140,11 @@ class FeatureEngineer:
         """
         df = data.copy()
         df = df.sort_values(by=["tic", "date"])
-        stock = Sdf.retype(df.copy())
+        stock = Sdf.retype(df.copy())      # Used to formate the table (ex : no CAPS in columns)
+                                           # Also to calculate indicators and use date as index
         unique_ticker = stock.tic.unique()
 
-        for indicator in self.tech_indicator_list:
+        for indicator in self.stock_indicator:
             indicator_df = pd.DataFrame()
             for i in range(len(unique_ticker)):
                 try:
