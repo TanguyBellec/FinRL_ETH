@@ -78,7 +78,7 @@ class FeatureEngineer:
         @:return: a DataMatrices object
         """
         # clean data
-        #df = self.clean_data(df)
+        #df = self.clean_data(df)     #### CARE I WE DO NOT CLEAN DATA HERE
 
         # add technical indicators using stockstats
         if self.use_technical_indicator:
