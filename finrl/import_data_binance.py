@@ -1,5 +1,7 @@
 import pandas as pd
 import datetime as dt
+import requests, json
+
 
 from binance_mod.client import Client
 
@@ -48,4 +50,49 @@ def add_symbols_indicators_to_df(df, symbols, interval, start_date, end_date):
         df_symbol = rename_columns_symbol(df_symbol, symbol)
 
         df = pd.merge(df, df_symbol, on = "date_close_time")
+    return df
+
+
+def import_BVOL(time_start, time_end):
+
+    data = json.loads(requests.get(f'https://coincodex.com/api/coincodexcoins/get_historical_data_by_slug/ftx-btc-vol-token/{time_start}/{time_end}/1?t=5459791').text)
+    df = pd.DataFrame(data['data'])
+
+    df = df[['time_start', "price_avg_usd"]]
+    for i in range(len(df)):
+        df['time_start'].iloc[i] = df['time_start'].iloc[i][0:10]
+    df = df.rename(columns = {'time_start' : 'date', 'price_avg_usd' : 'BVOL_avg'})
+    
+    return df
+
+
+def add_bvol_index(df, start_date, end_date):
+    
+    # Cell to keep only dates to allow to calculate VIX on preprocessing
+
+    df = df.astype({'date_close_time' : str})
+    df['date_close_time'].iloc[0][0:10]
+    df_date_close_time = df['date_close_time']
+    dates = []
+    for i in range(len(df)):
+        dates.append(df['date_close_time'].iloc[i][0:10])
+    df['date'] = dates
+    
+    bvol = import_BVOL(start_date, end_date)
+
+    bvol_index = []
+
+    for counter_bvol in range(len(bvol)):
+        current_date = bvol['date'][counter_bvol]
+        while(df['date'][len(bvol_index)] == current_date):
+            if(len(bvol_index) + 1 < len(df)):
+                bvol_index.append(bvol['BVOL_avg'][counter_bvol])
+            else:
+                break
+
+    bvol_index.append(bvol['BVOL_avg'].iloc[-1])
+    df['BVOL_avg'] = bvol_index
+    
+    df = df.drop(columns = ['date'])
+    
     return df
